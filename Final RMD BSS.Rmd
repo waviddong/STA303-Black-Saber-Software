@@ -1,0 +1,1216 @@
+---
+title: "Addressing Biases in Hiring and Remuneration in Black Saber Software"
+author: "Report prepared for Black Saber Software by Saber Analytics"
+date: '2021-04-22'
+output:
+  pdf_document:
+    template: report.tex
+    toc: yes
+    toc_depth: 2
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '2'
+subtitle: Sergio Steven Zheng Zhou, David Wong, Howard Wang, Jing Yuan Zhang
+lang: en
+titlepage: yes
+titlepage-color: 6C3082
+titlepage-rule-color: FFFFFF
+titlepage-rule-height: 2
+titlepage-text-color: FFFFFF
+---
+
+\newpage
+# Executive summary
+
+\newpage
+# Introduction
+
+Bias in hiring and remuneration in the recruiting and compensation process has been a popular topic for contention amongst employers. Results from previous studies in academia cite that gender gaps in promotion rates and earnings partly reflect gender differences in research productivity (Xie and Shauman, 1998) whereas other empirical studies suggest that gender gaps in research productivity cannot be fully explained by differences in researcher characteristics such as the concentration of female researchers in academic disciplines with less publishing (Hesli and Lee 2011). A comparative study that builds upon searching for biases within the promotion of university educators from PhD graduates to full professors evaluated the role of gender in internal promotion. Although these researchers concluded that worker-specific productivity differences may be a primary reason for gendered promotion rates and that remuneration rates reflect the productivity of work from an individual (Jokinen et al., 2017), investigating the external validity of such results would help Black Saber Software understand where and if there exists gendered biases in a different context.
+
+To understand possible areas for biases in these processes is crucial to understanding how equitable and fair these processes are. When considering factors like gender, productivity, tenureship, position level, and even area of work are some of many factors that contribute to recruiting and compensation. Black Saber Analytics, will conduct an analysis revolving around investigating if gendered effects across hiring and employee datasets affect factors of hiring rates, salary and promotion rates.
+
+For Black Saber Software, pursuing Equity, Diversity and Inclusion (EDI) within its company structure poses both strong marketing for its company image as well as provides short term and long term gains in talent retention, improved talent prospects, and productivity (Karakhan et al., 2020). In our research, we will investigate the existence of hiring biases based on gender and attempt to connect our findings to prior research in the field to develop Black Saber’s Software’s goal of improving their EDI initiatives for their future hiring and remuneration processes.
+
+### Research questions
+We, as members of Saber Analytics, will help Black Saber Software with a consulting project that will aim to develop statistical answers to the current questions that Black Saber Software faces regarding gender biases in their recruiting and remuneration processes. The focus of this analysis is to study whether there exists a bias, specifically a gender bias, the implemented AI pipeline. By focusing on the existence of a potential gender bias, we are able to clearly narrow the scope of the potential bias, while still keeping a universal approach that can be implemented in the three company departments, hiring, salary and promotion processes, that the board of directors requested. Using the data set provided by the data team of Black Saber Software, we will seek to answer the following questions:
+
+* Does the AI system have a potential gender bias and/or team based bias in either phase of the recruitment process?
+* Does the determination of salaries have any gender biases?
+* Does gender affect an employee’s odds of being promoted?
+
+\newpage
+# Technical report
+
+## Does the AI system have a potential gender bias and/or team based bias in either phase of the recruitment process?
+
+## Recruitment Process
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Libraries
+library(readxl)
+library(dbplyr)
+library(lme4)
+library(dplyr)
+library(mgcv)
+library(logistf)
+library(tidyverse)
+library(lubridate)
+library(janitor)
+library(kableExtra)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library(modelr)
+library(nlme)
+library(lmtest)
+library(broom)
+```
+
+
+```{r include=FALSE}
+setwd("C:/Users/irfan/Documents/University/Year 3/Winter 2020/STA303/Final Project")
+
+# Loading data
+phase_1 <- read_csv("data/phase1-new-grad-applicants-2020.csv")
+phase_2 <- read_csv("data/phase2-new-grad-applicants-2020.csv")
+phase_3 <- read_csv("data/phase3-new-grad-applicants-2020.csv")
+final_hires <- read_csv("data/final-hires-newgrad_2020.csv")
+```
+
+### EXECUTIVE SUMMARY - RECRUITMENT PROCESS
+
+This report was commissioned by Black Saber Software to interpret if the hiring, salary, and promotion processes were biased and unfair.  Recent public outcry have pointed towards potential biases in Black Saber's processes. The AI algorithm that reviews over applications is reviewed. The AI assesses applicants' scores on techical, writing, and speaking skills.
+
+Previous literature have shown that gendered biases are still prevalent in the hiring, salary, and promotion processes. However, some gendered differences can boil down to certain factors, such as productivity differences.
+
+The results of our study are summarized below. A baseline statistical significance level of 0.05 is used in this report.
+
+* Phase 1 to phase 2 recruitment process has no statistically significant bias towards gender.
+
+  * Percentage of men that proceeded to phase 2 (49.83%) is slightly higher than the percentage of women (48.87%). 
+
+  * In Data team applications, 53.60% of men proceeded to phase 2 and 50.80% of women proceeded to phase 2.
+
+  * In Software team applications, 46.99% of men proceeded to phase 2 and 47.59% of women proceeded to phase 2
+
+* Phase 2 to phase 3 recruitment process has no statistically significant bias towards gender.
+
+  * In Data team applications, 5.6% of men proceeded to phase 3, while only 2.4% of women proceeded to phase 3.
+
+  * In Software team applications, 4.8% of men proceeded to phase 3, while only 2.1% of women proceeded to phase 3.
+  
+* Phase 3 to hired recruitment process has no statistically significant bias towards gender.
+
+  * In Data team applications, 3.2% of men proceeded to phase 3 while only 0.81% of women proceeded to phase 3.
+  
+  * In Software team applications, 2.41% of men were hired, while 0.53% of women were hired.
+  
+It is important to note that, despite the statistical insignificance at the 5% level, there may be some minor biases for gender in phase 2 to phase 3. The percentage of successful males were more than 2 times greater than percentage of successful females in both Data and Software team applications. This implies that there may be some biases in the AI algorithm. However, technical, writing, speaking, and leadership components of phase 2 were statistically significant at the 0.01% level. So, the hiring process is fair and weighs applicants based on their value to the company.
+
+### Methods
+
+#### Data description and wrangling
+
+The data set provided by the Black Saber Software data team are as follows:
+
+*Data set: Phase 1: Initial Application*
+
+Description: Complete form of 613 individuals who apply to the Black Saber Software company and their characteristics for the year of 2021
+
+Variables collected:
+
+- applicant_id: qualitative variable - Numerical ID assigned to applicants in phase 1
+
+- team_applied_for: qualitative variable - Data or Software
+
+- cover letter: binary variable - 1 have, 0 don’t have
+
+- CV: binary variable - 1 have, 0 don’t have
+
+- gpa: quantitative variable - Numerical value for gpa
+
+- gender: qualitative variable - Men, woman, or prefer not to say
+
+- extracurriculars: qualitative variable - Numerical indicator of relevance and/or skill building extracurriculars of extracurricular activities with increasing values of 0, 1, 2
+
+- Internship experience: qualitative variable - Numerical indicator of relevance of skill similarities from other job activities with increasing values of 0, 1, 2
+
+Transformations: 
+
+1. Data set was included to a combined data frame named as “hiring” using the function “left_join” by the variable “applicant_id”
+
+*Data set: Phase 2: Technical Task, Writing Sample, Pre-recorded Video*
+
+Description: Form of only 300 individuals who proceeded to phase 2 of the Black Saber Software recruitment process and their relevant characteristics for the year 2021
+
+Variable collected:
+
+- applicant_id: qualitative variable - Numerical ID assigned to applicants in phase 1
+
+- technical_skills: quantitative variable - AI graded score from 0-100 on timed technical tasks
+
+- writing_skills: quantitative variable - AI graded score from 0-100 on timed writing tasks
+
+- speaking_skills: quantitative variable - AI graded score from 0-100 on pre-recorded speaking tasks
+
+- leadership_presence: quantitative variable - AI graded score from 0-100 on leadership related qualities found in the pre-recorded video
+
+Transformations:
+
+1. Data set was included to a combined data frame named as “hiring” using the function “left_join” by the variable “applicant_id”
+
+2. Missing values in the combined data frame “hiring” were replaced by 0s
+
+3. A categorical column named “pass_1”, composed of only 1s, was included to categorize those individuals that were able to proceed to phase 2
+
+4. A filtered data frame was created named “hiring_filter_p2” to represent only those individuals that were able to proceed to phase 2
+
+5. A categorical column named “pass_1_text”, composed of “pass” or “reject” matching the binary categorical column of proceed to phase 2
+
+6. A rounded prediction column named “pred_p1” was fitted using the “predict” function
+
+7. A correct prediction column named “correct_p1” was fitted if the prediction matched whether the individual proceeded to phase 2
+
+*Data set: Phase 3: Final Interview*
+
+Description: Form of only 22 individuals who proceeded to phase 3 of the Black Saber Software recruitment and their relevant characteristics for the year 2021
+
+Variable collected:
+
+- applicant_id: qualitative variable - Numerical ID assigned to applicants in phase 1
+
+- Interviewer_rating_1: quantitative variable - Numerical  value from 0-100 on company fit
+
+- Interviewer_rating_2: quantitative variable - Numerical  value from 0-100 on company fit
+
+Transformations:
+1. Data set was included to a combined data frame named as “hiring” using the function “left_join” by the variable “applicant_id”
+2. Missing values in the combined data frame “hiring” were replaced by 0s
+3. A categorical column named “pass_2”, composed of only 1s, was included to categorize those individuals that were able to proceed to phase 3
+4. A filtered data frame was created named “hiring_filter_p3” to represent only those individuals that were able to proceed to phase 3
+5. A categorical column named “pass_2_text”, composed of “pass” or “reject” matching the binary categorical column of proceed to phase 3
+6. A rounded prediction column named “pred_p2” was fitted using the “predict” function
+7. A correct prediction column named “correct_p2” was fitted if the prediction matched whether the individual proceeded to the hired phase
+
+*Data set: Final Hires New Grad 2020*
+
+Description: Form of only 10 individuals who were sent an offer letter for Black Saber Software in the year 2021
+
+Variables collected:
+
+- applicant_id: qualitative variable - Numerical ID assigned to applicants in phase 1
+
+Transformations:
+
+1. Data set was included to a combined data frame named as “hiring” using the function “left_join” by the variable “applicant_id”
+
+2. Missing values in the combined data frame “hiring” were replaced by 0s
+
+3. A categorical column named “pass_3”, composed of only 1s, was included to categorize those individuals that were able to proceed to the hired phase
+
+4. A filtered data frame was created named “hiring_filter_p3” to represent only those individuals that were able to proceed to phase 3
+
+5. The filtered data frame, hiring_filter_p3, was wrangled into “hiring_filter_p3_long”. A combined column named “interview” describing interview 1 or interview 2. Another columns was created named “rating” giving the respective rating of interview 1 or interview 2
+
+6. A categorical column named “pass_3_text”, composed of “pass” or “reject” matching the binary categorical column of proceed to phase 3
+
+7. A rounded prediction column named “pred_p3” was fitted using the “predict” function
+
+8. A correct prediction column named “correct_p3” was fitted if the prediction matched whether the individual proceeded to the hired phase
+
+```{r include=FALSE}
+# Creating hiring data frame
+# If applicant went to next round (phases)
+phase_2$pass_1 <- 1 # Creating pass_1
+phase_3$pass_2 <- 1 # Creating pass_2
+final_hires$pass_3 <- 1 # Creating pass_3
+
+hiring <- left_join(phase_1, phase_2) %>%
+  left_join(phase_3, by = "applicant_id") %>%
+  left_join(final_hires, by = "applicant_id")
+
+# Renaming all NA to 0
+hiring[is.na(hiring)] <- 0
+
+# re-ordering columns
+hiring <- hiring[,c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 13, 16, 17)]
+
+##### Phase 1-> Phase 2 #####
+# Making pass == 1 to Passed and pass == 0 to Not pass
+hiring <- hiring %>%
+  mutate(pass_1_text = ifelse(pass_1 == 1, "Pass", "Rejected"))
+
+# subseting into team data
+hiring_data <- hiring %>% filter(team_applied_for == "Data")
+
+# Making pass == 1 to Passed and pass == 0 to Not pass for team data
+hiring_data <- hiring_data %>%
+  mutate(pass_1_text = ifelse(pass_1 == 1, "Pass", "Rejected"))
+
+# subsetting into team software
+hiring_software <- hiring %>% filter(team_applied_for == "Software")
+hiring_software
+
+# Making pass == 1 to Passed and pass == 0 to Not pass for team software
+hiring_software <- hiring_software %>%
+  mutate(pass_1_text = ifelse(pass_1 == 1, "Pass", "Rejected"))
+
+#filtering to only those that pass phase 1
+hiring_filter_p2 <- subset(hiring, pass_1 == 1)
+
+##### Phase 2 -> Phase 3 #####
+#subsetting to only those that pass phase 1
+hiring_filter_p2 <- subset(hiring, pass_1 == 1)
+
+# Making pass == 1 to Passed and pass == 0 to Not pass
+hiring <- hiring %>%
+  mutate(pass_2_text = ifelse(pass_2 == 1, "Pass", "Rejected"))
+
+# Making pass == 1 to Passed and pass == 0 to Not pass for team data
+hiring_data <- hiring_data %>%
+  mutate(pass_2_text = ifelse(pass_2 == 1, "Pass", "Rejected"))
+
+# Making pass == 1 to Passed and pass == 0 to Not pass for team software
+hiring_software <- hiring_software %>%
+  mutate(pass_2_text = ifelse(pass_2 == 1, "Pass", "Rejected"))
+
+##### Phase 3 -> Hired #####
+#subsetting to only those that pass phase 2
+hiring_filter_p3 <- subset(hiring, pass_2 == 1)
+
+# Using pivot_longer to combine interview ratings 1 and 2
+hiring_filter_p3_long <- pivot_longer(hiring_filter_p3,
+             cols = starts_with("interview"),
+             names_to = "interview", values_to = "rating"
+             ) %>% 
+  mutate(interview_rating = case_when(
+    str_detect(interview, "interviewer_rating_1")~"Interview 1",
+    str_detect(interview, "interviewer_rating_2")~"Interview 2",
+  ))
+
+# Making pass == 1 to Passed and pass == 0 to Not pass
+hiring <- hiring %>%
+  mutate(pass_3_text = ifelse(pass_2 == 1, "Pass", "Rejected"))
+
+# Making pass == 1 to Passed and pass == 0 to Not pass for team data
+hiring_data <- hiring_data %>%
+  mutate(pass_3_text = ifelse(pass_3 == 1, "Pass", "Rejected"))
+
+# Making pass == 1 to Passed and pass == 0 to Not pass for team software
+hiring_software <- hiring_software %>%
+  mutate(pass_3_text = ifelse(pass_3 == 1, "Pass", "Rejected"))
+
+```
+#### Purpose + Appropriateness + Accuracy of description
+
+For the statistical analysis, all individuals were included in the statistical methods.
+
+Statistical methods used:
+
+1. Generalized Linear Models
+  + Dummy variables for: team_applied_for, extracurricular, work_experience, and gender
+  + Binomial response distribution using a logistic link
+  + Regression summary statistics
+  + Confidence intervals
+  + P-values
+  + Likelihood-ratio test
+  + Hypothesis testing
+  
+2. Generalized Linear Mixed Models
+  + Dummy variables for: team_applied_for, gender
+  + Random effect: applicant_id
+  + Binomial response distribution using a logistic link
+  + Regression summary statistics
+  + Confidence intervals
+  + P_values 
+  + Hypothesis testing
+
+Stastitical Models:
+
+Phase 1 to Phase 3: Model - "p1_glm"
+$$\log(\cfrac{p}{1-p}) = \beta_{0} + \beta_{1}x_{team,i} + \beta_{2}x_{exc,i} + \beta_{3}x_{workexp,i} + \beta_{4}x_{gender,i} + \beta_{5}x_{GPA,i} + \epsilon_i $$
+
+$$\text{where } i = 1,2,...n\ and\ p\ =\text{probability of success}$$
+Phase 2 to Phase 3: Model - "p2_glm"
+
+$$\log(\cfrac{p}{1-p}) = \beta_{0} + \beta_{1}x_{gender,i} + \beta_{2}x_{team,i} + \beta_{3}x_{tech,i} + \beta_{4}x_{writing,i} + \beta_{5}x_{speak,i} + \beta_{6}x_{leader,i} + \epsilon_i $$
+
+$$\text{where } i = 1,2,...n\ and\ p\ =\text{probability of success}$$
+
+Phase 3 to Hired: Model - "p3_glmm"
+$$\log(\cfrac{p}{1-p}) = \beta_{0}U + \beta_{1}x_{team,i} + \beta_{2}x_{rating,i} + \beta_{3}x_{gender,i} + \epsilon_i $$
+
+$$\text{where } i = 1,2,...n\ and\ p\ =\text{probability of success}$$
+
+
+Explanation:
+
+The proposed models with the given covariates were chosen for several reasons. The covariates, team, extracurriculars, work experience, and gender, were chosen through a likelihood ratio test for nested generalized linear models. The likelihood ratio test addresses the goodness of fit of the two models and compares it through the ratio of their corresponding likelihoods through maximum likelihood. By comparing two nested models, if the p-value of the test is statistically significant, there is no clear difference between the two models. This implies that the advanced model is equivalent to the simple model and explains the dataset as well. 
+
+Each phase has a corresponding model. The model, p1_glm, predicts the probability of proceeding to phase 2. The next model, p2_glm, predicts the probability for proceeding to phase 3. The last model predicts the probability of proceeding to the hired phase. Each of these models predict the probability of an individual with certain quantifiable characteristics and weigh those characteristics into the probability calculation.
+
+Certain variables, such as cv and cover_letter, were omitted from the models because the variables are requirements to apply for the job. The gender variable was included in every model because the main issue was to see if there were any gender biases throughout any of the phases.
+
+### Result Analysis 
+
+#### Summary Statistics
+
+```{r echo=FALSE}
+# summary statistics
+ss_cover <- summary(hiring)[,3]
+ss_cv <- summary(hiring)[,4]
+ss_gpa <- summary(hiring)[,5]
+ss_gender <-table(hiring$gender)
+ss_extracurriculars <- summary(hiring)[,7]
+ss_work_experience <- summary(hiring)[,8]
+ss_technical_skills <- summary(hiring)[,9]
+ss_writing_skills <- summary(hiring)[,10]
+ss_leadership_presence <- summary(hiring)[,10]
+ss_speaking_skills <- summary(hiring)[,11]
+ss_interviewer_rating_1 <- summary(hiring)[,12]
+ss_interviewer_rating_2 <- summary(hiring)[,13]
+
+ss_dataframe <- data.frame(ss_cover, ss_cv, ss_gpa, ss_extracurriculars, ss_work_experience, ss_technical_skills, ss_writing_skills, ss_leadership_presence, ss_speaking_skills, ss_interviewer_rating_1, ss_interviewer_rating_2)
+
+ss_dataframe %>% kable(caption = "Summary Statistics for Recruitment Data",col.names = c("Cover Letter", "CV","GPA", "Extracurriculars","Work Experience","Technical Skills", "Writing Skills", "Leadership Presence", "Speaking Skills", "Interviewer 1","Interviewer 2"))%>%
+  kable_classic(full_width = F, html_font = "Times New Roman")
+
+ss_gender %>% kable(caption = "Frequency Table for Gender Variable", col.names = c("Gender", "Frequency")) %>% kable_classic(full_width = F, html_font = "Times New Roman")
+```
+Explanation:
+
+The first figure, named "Summary Statistics for Recruitment Data", is a summary table for the summary statistics of the following covariates: CoverLetter,	CV, GPA,	Extracurriculars,	Work Experience,	Technical Skills,	Writing Skills,	Leadership Presence,	Speaking Skills,	Interviewer 1,	Interviewer 2 in the combined recruitment data. The second figure, named "Frequency Table for Gender", is a gender frequency table for all the individuals who applied to Black Saber Software in the year 2021. 
+
+```{r cache=TRUE, include=FALSE}
+#### Pass phase 1 - Model
+p1_glm <- glm(pass_1 ~ gpa + factor(team_applied_for) + extracurriculars + factor(work_experience) + factor(gender), 
+              data = hiring, family = "binomial")
+p1_glm_teamless <- glm(pass_1 ~ gpa + extracurriculars + factor(work_experience) + factor(gender), 
+              data = hiring, family = "binomial")
+```
+
+#### Pass Phase 1 - Likelihood-Ratio Test
+
+```{r echo=FALSE}
+p1_lr<-lmtest::lrtest(p1_glm, p1_glm_teamless)
+model_vec <- c("Model_1", "Model_2")
+p1_lr_1<-as.data.frame(lmtest::lrtest(p1_glm_teamless, p1_glm)) 
+p1_lr_1 <- cbind(model_vec, p1_lr_1)
+
+p1_lr_1 %>%
+ kable(caption = "Likelihood-Ratio Test for p1_glm", col.names = c("Model", "Log(likelihood)", "Df", "$chi^{2}$", "Pvalue", "#Df")) %>% kable_classic(full_width = F, html_font = "Times New Roman") 
+```
+
+A likelihood-ratio test was conducted to test for the most appropriate model between Model 1 (p1_glm):
+$$\log(\cfrac{p}{1-p}) = \beta_{0} + \beta_{1}x_{team,i} + \beta_{2}x_{exc,i} + \beta_{3}x_{workexp,i} + \beta_{4}x_{gender,i} + \beta_{5}x_{GPA,i} + \epsilon_i $$
+
+$$\text{where } i = 1,2,...n\ and\ p\ =\text{probability of success}$$
+
+and Model 2("p1_glm_teamless"):
+$$\log(\cfrac{p}{1-p}) = \beta_{0} + \beta_{1}x_{exc,i} + \beta_{2}x_{workexp,i} + \beta_{3}x_{gender,i} + \beta_{4}x_{GPA,i} + \epsilon_i $$
+
+$$\text{where } i = 1,2,...n\ and\ p\ =\text{probability of success}$$
+and it showed that model 2(model without the inclusion of factor(team_applied_for)) was a better fit due to a high p-value (pvalue= 0.6737137) suggesting that the simpler model explained the data just as well as the more complicated model. For the sake of this analysis, model 1 with the inclusion of factor(team_applied_for) will be used to answer the question of whether application for a certain team shows a potential bias.  
+
+#### Estimates and 95% Confidence Interval
+
+```{r echo=FALSE, error=FALSE}
+p1_result_table <- cbind(est = summary(p1_glm)$coef[,1], confint(p1_glm))
+p1_pval <- summary(p1_glm)$coef[,4]
+p1_exp <- round(exp(p1_result_table)/ (1+exp(p1_result_table)),4)
+p1_comp <- cbind(p1_exp, pval = round(p1_pval, 4))
+
+
+p1_comp %>%
+ kable(caption = "Estimates and 95% Confidence Interval for p1_glm", col.names = c("Estimate", "2.5%", "97.5%", "pval")) %>%
+ kable_classic(full_width = F, html_font = "Times New Roman")
+```
+
+
+```{r include=FALSE}
+#### Pass Phase 1 - Model Prediction Accuracy 
+hiring$pred_p1 <- round(predict(p1_glm, type = "response")) 
+
+hiring <- hiring %>% 
+  mutate(correct_p1 = if_else(pass_1 == pred_p1, 1, 0))  
+
+sum(hiring$correct_p1)/nrow(hiring)
+```
+
+#### Pass Phase 1 - Graphs and Figures
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+plot_1 <- ggplot(hiring, aes(x = pass_1_text, group = gender)) + 
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percentage",x="Pass or Reject", fill="Decision") +
+  facet_grid(~gender) +
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle("Pass Phase 1 Prediction - All") +
+  scale_fill_discrete(name = "Decision", labels = c("Pass", "Rejected"))
+
+plot_1
+
+
+plot_1_data <- ggplot(hiring_data, aes(x = pass_1_text, group = gender)) + 
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..),y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percentage",x="Pass or Reject", fill="Result") +
+  facet_grid(~gender) +
+  scale_y_continuous(labels = scales::percent) + 
+  ggtitle("Pass Phase 1 Prediction - Data Team") +
+  scale_fill_discrete(name = "Decision", labels = c("Pass", "Rejected"))
+
+plot_1_data
+
+
+plot_1_software <- ggplot(hiring_software, aes(x = pass_1_text, group = gender)) + 
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percentage", x="Pass or Reject", fill="Result") +
+  facet_grid(~gender) +
+  scale_y_continuous(labels = scales::percent) + 
+  ggtitle("Pass Phase 1 Prediction - Software Team") +
+  scale_fill_discrete(name = "Decision", labels = c("Pass", "Rejected"))
+
+plot_1_software
+
+plot_model(p1_glm, type = c("pred"), terms = c("gpa[all]", "gender", "team_applied_for"), title = "Probability of Proceeding to Phase 2 by GPA", ylab = "Probability") + scale_x_continuous(limits = c(0,4)) + labs(y="Probability")
+plot_model(p1_glm, type = c("pred"), terms = c("extracurriculars", "gender", "team_applied_for"), title = "Probability of Proceeding to Phase 2 by Extracurriculars")+ labs(y="Probability") 
+plot_model(p1_glm, type = c("pred"), terms = c("work_experience", "gender", "team_applied_for"), title = "Probability of Proceeding to Phase 2 by Work Experience") + labs(y="Probability") 
+```
+Result explanation:
+
+An important note to make is that individuals in the the prefer not to say gender category have a limited sample size, therefore they will be deemed as outliers in the interpretation between man and women.
+
+The analysis of the generalized linear model of whether an individual proceeded to phase 2 (response: pass_1) on the explanatory variables of team_applied_for(dummy variable for each category), extracurricular, work experience(dummy variable for each category), and gender(dummy variable for each category) showing 4 covariates as statistically significant at the 95% level or greater. These beta coefficients were: baseline with odds values equal to 0.0008 with a 95% confidence interval between (0.0002 and 0.0026) and statistical significance of (pvalue = $2.0*e^{-16}$), gpa with odds values equal to 0.8853 with a 95% confidence interval between (0.8363 and 0.9230) and statistical significance of(pvalue = $2.0*e^{-16}$), work experience - 1 with odds values equal to 0.8183 with a 95% confidence interval between (0.6893 and	0.9105) and statistical significance of(pvalue = 0.0001), and work experience - 2 with odds values equal to 0.7885 with a 95% confidence interval between (0.5802 and	0.9156) and statistical significance of(pvalue = 0.0118). The baseline covariate is for a male individual saying that male individuals have odds of 0.0008 which is statistically significant due to low pvalues, while females have odds of 0.4927 which is not statistically significant due to high pvalues. This difference in odds can be interpreted as a potential non gender bias. The other covariates are factors that greatly affected the odds of proceeding to the next stage for an individual, where gpa and work experience relevancy positively affect the odds. Furthermore, the covariate for team_applied_for was not statistically significant with a pvalue of 0.6737 suggesting that there does not exists a potential bias between company team recruitment. Based on the statistical analysis, Black Saber Software does not show a statistically significant bias towards gender in its phase 1 recruitment process, but should not exclude the possibility of a slight potential gender bias due to small percentage differences as shown in the following graphical interpretations. 
+
+Using the provided bar charts we can see the percentage of people that were able to proceed to phase 2, distributed by gender. In the bar chart named "Phase 1 Prediction - All" it contains data for individuals that applied to either team, data or software. The decision making shows a potential bias towards the male gender, as the percentage of men(49.83%) is slightly higher than that of woman(48.87%) who were able to proceed to the next phase. The meaning of these percentages is that there exists a minor potential male gender bias in the individuals who proceed from phase 1 to phase 2 in the Black Saber Software recruitment. The next two bar graphs, which are named "Phase 1 Prediction - Data team" and "Phase 1 Prediction - Software team" respectively, show the percentage of individuals separated by gender and team that proceeded to the next phase. In the case of those individuals that applied to a data team, the percentage of men that were able to proceed to the next stage was (53.6%), a significantly higher percentage than that of women (50.8%). Lastly, for the software team, the percentage of men that were able to proceed to the next stage was (46.99%), a slightly lower percentage than that of women (47.59%). Due to the support from the significance test on the coviariates on team_applied_for we can suggest that differences between team may be due to sample variances. 
+
+Using the provided figures we can also see how each variable affects the probability of proceeding to the next phase. The first figure named "Probability of Proceeding to Phase 2 by GPA", shows the relationship of gpa and probability of proceeding to phase 2. This figure shows a positive relationship with gpa and probability, where higher gpa values give a better probability of proceeding to the next phase. Furthermore, the distributions between man and woman is overlapping which suggests that gpa values are seen as equal regardless of gender or team_applied_for. The potential gender bias can therefore be seen in how extracurricular and work experience are related to the probability of proceeding to the next stage. In the figure named "Probability of Proceeding to Phase 2 by Extracurricular" shows a positive relationship between extracurricular and probability of proceeding to the next phase, where higher level of extracurricular have a higher probability of proceeding to the next stage.  Furthermore, the distributions between man and woman is slightly higher for men which suggests a potential gender bias in the phase 1 recruitment process, but differences could be due to sample variations as since with a high pvalue. Lastly, the figure named "Probability of Proceeding to Phase 2 by Work Experience" suggests that individuals who have had similar work experience(s) have a higher probability of proceeding to the next phase where a category of 1 and 2 are fairly similar. Furthermore, the the mean values for male individuals in the application of either team are slightly distributed higher than the mean values for females, suggesting a potential minimal gender bias towards men, but not in team distribution. 
+
+
+```{r include=FALSE}
+#### Pass Phase 2 - Model
+#filtering to only those that pass phase 1
+hiring_filter_p2 <- subset(hiring, pass_1 == 1)
+
+p2_glm <- glm(pass_2 ~ factor(gender) + factor(team_applied_for) + technical_skills + writing_skills + leadership_presence + speaking_skills, family = 'binomial', data = hiring_filter_p2)
+
+# previous phase variables
+p2_glm_2 <- glm(pass_2 ~ factor(gender) + factor(team_applied_for) + gpa + extracurriculars + factor(work_experience) + technical_skills + writing_skills + leadership_presence + speaking_skills, family = 'binomial', data = hiring_filter_p2)
+```
+
+#### Pass Phase 2 - Likelihood-Ratio Test
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+p2_lr<-lmtest::lrtest(p2_glm_2, p2_glm)
+model_vec <- c("Model_1", "Model_2")
+p2_lr_2<-as.data.frame(lmtest::lrtest(p2_glm_2, p2_glm)) 
+p2_lr_2 <- cbind(model_vec, p2_lr_2)
+
+
+p2_lr_2 %>%
+ kable(caption = "Likelihood-Ratio Test for p1_glm", col.names = c("Model", "Log(likelihood)", "Df", "$chi^{2}$", "Pvalue", "#Df")) %>% kable_classic(full_width = F, html_font = "Times New Roman") 
+```
+A likelihood-ratio test was conducted to test for the most appropriate model between Model 1("p2_glm"):
+
+$$\log(\cfrac{p}{1-p}) = \beta_{0} + \beta_{1}x_{gender,i} + \beta_{2}x_{team,i} + \beta_{3}x_{tech,i} + \beta_{4}x_{writing,i} + \beta_{5}x_{speak,i} + \beta_{6}x_{leader,i} + \epsilon_i $$
+
+$$\text{where } i = 1,2,...n\ and\ p\ =\text{probability of success}$$
+
+and Model 2 ("p2_glm_2"):
+$$\log(\cfrac{p}{1-p}) = \beta_{0} + \beta_{1}x_{gender,i} + \beta_{2}x_{team,i} + \beta_{3}x_{tech,i} + \beta_{4}x_{writing,i} + \beta_{5}x_{speak,i} + \beta_{7}x_{GPA,i} + \beta_{8}x_{exc,i} + \beta_{9}x_{workexp,i} + \epsilon_i $$
+
+$$\text{where } i = 1,2,...n\ and\ p\ =\text{probability of success}$$
+and it showed that model 1(model without the inclusion of previous variables) was a better fit due to a high p-value(pvalue=0.7670104) suggesting that the simpler model explained the data just as well as the more complicated model.
+
+#### Estimates and 95% Confidence Interval
+
+```{r echo=FALSE, error=FALSE, warning=FALSE}
+p2_result_table <- cbind(est = summary(p2_glm)$coef[,1], confint(p2_glm))
+p2_pval <- summary(p2_glm)$coef[,4]
+p2_exp <- round(exp(p2_result_table)/ (1+exp(p2_result_table)),4)
+p2_comp <- cbind(p2_exp, pval = round(p2_pval, 4))
+
+
+
+p2_comp %>%
+ kable(caption = "Estimates and 95% Confidence Interval for p2_glm", col.names = c("Estimate", "2.5%", "97.5%", "pval")) %>%
+ kable_classic(full_width = F, html_font = "Times New Roman")
+```
+
+
+```{r include=FALSE}
+#### Pass Phase 2 - Model Prediction Accuracy 
+hiring_filter_p2$pred_p2 <- round(predict(p2_glm, type = "response")) 
+
+
+hiring_filter_p2<- hiring_filter_p2 %>% 
+  mutate(correct_p2 = if_else(pass_2 == pred_p2, 1, 0))  
+hiring_filter_p2
+
+sum(hiring_filter_p2$correct_p2)/nrow(hiring_filter_p2)
+```
+
+#### Pass Phase 2 - Graphs and Figures
+
+```{r echo=FALSE}
+plot_2 <- ggplot(hiring, aes(x = pass_2_text, group = gender)) + 
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percentage",x="Pass or Reject", fill="Result") +
+  facet_grid(~gender) +
+  scale_y_continuous(labels = scales::percent) +
+  ggtitle("Pass Phase 2 Prediction - All") +
+  scale_fill_discrete(name = "Decision", labels = c("Pass", "Rejected"))
+
+plot_2
+
+plot_2_data <- ggplot(hiring_data, aes(x = pass_2_text, group = gender)) + 
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percentage",x="Pass or Reject", fill="Result") +
+  facet_grid(~gender) +
+  scale_y_continuous(labels = scales::percent) + 
+  ggtitle("Pass Phase 2 Prediction - Data Team") +
+  scale_fill_discrete(name = "Decision", labels = c("Pass", "Rejected"))
+
+plot_2_data
+
+plot_2_software <- ggplot(hiring_software, aes(x = pass_2_text, group = gender)) + 
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percentage",x="Pass or Reject", fill="Result") +
+  facet_grid(~gender) +
+  scale_y_continuous(labels = scales::percent) + 
+  ggtitle("Pass Phase 2 Prediction - Software Team") +
+  scale_fill_discrete(name = "Decision", labels = c("Pass", "Rejected"))
+
+plot_2_software
+
+plot_model(p2_glm, type = c("pred"), terms = c("technical_skills[all]","gender", "team_applied_for"), title = "Probability of Proceeding to Phase 3 by Technical Skills") + labs(y="Probability")
+plot_model(p2_glm, type = c("pred"), terms = c("writing_skills[all]","gender", "team_applied_for"), title = "Probability of Proceeding to Phase 3 by Writing Skills") + labs(y="Probability")
+plot_model(p2_glm, type = c("pred"), terms = c("leadership_presence","gender", "team_applied_for"), title = "Probability of Proceeding to Phase 3 by Leadership Presence") + labs(y="Probability")
+plot_model(p2_glm, type = c("pred"), terms = c("speaking_skills","gender", "team_applied_for"), title = "Probability of Proceeding to Phase 3 by Speaking Skills") + labs(y="Probability")
+```
+Result explanation:
+
+An important note to make is that non of the individuals in the the prefer not to say gender category did not proceed to phase 2 and variations can be due to a limited sample size, therefore they will be deemed as outliers in the interpretation between man, women and teams.
+
+The analysis of the generalized linear model of whether an individual proceeded to phase 3 (response: pass_2) on the explanatory variables of gender(dummy variable for each category), team_applied_for(dummy variable for each category), technical_skills, writing_skills, leadership_presence, and speaking_skills sshowing 5 covariates as statistically significant at the 95% level or greater. These beta coefficients were: baseline (male in data team) with odds values equal to 0 with a 95% confidence interval between (0.0000 and 0.0000) and statistical significance of (pvalue = $2.0*e^{-16}$), technical skills with odds values equal to 0.5231 with a 95% confidence interval between (0.8363 and 0.9230) and statistical significance of(pvalue = $2.0*e^{-16}$), writing skills with odds values equal to 0.5257 with a 95% confidence interval between (0.5141 and 0.5405) and statistical significance of(pvalue = 0.0001), leadership presence with odds values equal to 0.7246 with a 95% confidence interval between (0.6438 and 0.8128) and statistical significance of(pvalue = $2.0*e^{-16}$), and speaking skills with odds values equal to 0.7031 with a 95% confidence interval between (0.6231 and 0.7908) and statistical significance of(pvalue = $2.0*e^{-16}$). The baseline covariate is for a male individual saying that male individuals have odds of 0 which is statistically significant due to low pvalues, while females have odds of 0.3134 which is not statistically significant due to high pvalues. This difference in odds can be interpreted as a potential non gender bias. The other covariates are factors that greatly affected the odds of proceeding to the next stage for an individual, where technical_skills, writing_skills, leadership_presence, speaking_skills. Furthermore, the covariate for team_applied_for was not statistically significant with a pvalue of 0.6737 suggesting that there does not exists a potential bias between company team recruitment. Based on the statistical analysis, Black Saber Software does not show a statistically significant bias towards gender in its phase 2 recruitment process, but should not exclude the possibility of a slight potential gender bias due to small percentage differences as shown in the following graphical interpretations. 
+
+Using the provided bar charts we can see the percentage of people that were able to proceed to phase 3, distributed by gender. In the bar chart named "Phase 2 Prediction - All" it contains data for individuals that applied to either team, data or software. The decision making shows a potential bias towards the male gender, as the percentage of men(5.2%) is about 2 times as high than that of woman(2.3%) who were able to proceed to the next phase. The meaning of these percentages is that there exists a minor potential male gender bias in the individuals who proceed from phase 2 to phase 3 in the Black Saber Software recruitment. The next two bar graphs, which are named "Phase 2 Prediction - Data team" and "Phase 2 Prediction - Software team" respectively, show the percentage of individuals separated by gender and team that proceeded to the next phase. In the case of those individuals that applied to a data team, the percentage of men that were able to proceed to the next stage was (5.6%), also about a 2 times higher percentage than that of women (2.4%). Lastly, for the software team, the percentage of men that were able to proceed to the next stage was (4.8%), also about a 2 times higher percentage than that of women(2.1%). This means that there could exist the posibility of a slight male gender bias. Furthermore, due to the support from the significance test on the coviariates on team_applied_for we can suggest that differences between team may be due to sample variances. 
+
+Using the provided figures we can also see how each variable affects the probability of proceeding to the next phase. The first figure named "Probability of Proceeding to Phase 3 by Technical Skills", shows the relationship of technical skills and probability of proceeding to phase 3. This figure shows a positive relationship with technical skills and probability, where higher technical skill ratings gives a higher probability of proceeding to the next phase. Furthermore, the distributions between man and woman is higher for men which suggests the possibility of a male gender bias in the AI process. In the figure named "Probability of Proceeding to Phase 3 by Writing Skills" shows the relationship of writing skills and probability of proceeding to phase 3. This figure shows a positive relationship with writing skills and probability, where higher writing skill ratings gives a higher probability of proceeding to the next phase. Furthermore, the distributions between man and woman is higher for men which suggests the possibility of a male gender bias in the AI process. In the figure named "Probability of Proceeding to Phase 3 by Leadership Presence" shows the relationship of leadership presence and probability of proceeding to phase 3. This figure shows a positive relationship with leadership presence and probability, where higher leadership presence ratings gives a higher probability of proceeding to the next phase. Furthermore, the distributions between man and woman is higher for men which suggests the possibility of a male gender bias in the AI process. Lastly, the figure named "Probability of Proceeding to Phase 3 by Speaking Skills" shows the relationship of speaking skills and probability of proceeding to phase 3. This figure shows a positive relationship with speaking skills and probability, where higher speaking skill ratings gives a higher probability of proceeding to the next phase. Furthermore, the distributions between man and woman is higher for men which suggests the possibility of a male gender bias in the AI process. Variations between team are most likely due to variations in the sampling distribution.
+
+
+
+```{r cache=TRUE, include=FALSE}
+#### Pass Phase 3 - Model
+# GLMER model
+p3_glmm <- lme4::glmer(pass_3 ~ (1 | applicant_id) + factor(team_applied_for) + rating + factor(gender), family = "binomial", data = hiring_filter_p3_long, nAGQ = 0)
+```
+
+#### Estimates and 95% Confidence Interval
+```{r echo=FALSE, warning=FALSE}
+p1_result_table <- cbind(est = summary(p1_glm)$coef[,1], confint(p1_glm))
+p1_pval <- summary(p1_glm)$coef[,4]
+p1_exp <- round(exp(p1_result_table)/ (1+exp(p1_result_table)),4)
+p1_comp <- cbind(p1_exp, pval = round(p1_pval, 4))
+
+
+p1_comp %>%
+ kable(caption = "Estimates and 95% Confidence Interval for p1_glm", col.names = c("Estimate", "2.5%", "97.5%", "pval")) %>%
+ kable_classic(full_width = F, html_font = "Times New Roman")
+```
+
+```{r echo=FALSE, error=TRUE}
+p3_result_table <- cbind(est = summary(p3_glmm)$coeff[,1], confint(p3_glmm, method = "Wald")[-1,])
+p3_pval <- summary(p3_glmm)$coeff[,4]
+p3_exp <- round(exp(p3_result_table))
+p3_comp <- cbind(p3_exp, pval = round(p3_pval, 4))
+
+
+
+p3_comp %>%
+ kable(caption = "Estimates and 95% Confidence Interval for p3_glmm", col.names = c("Estimate", "2.5%", "97.5%", "pval")) %>%
+ kable_classic(full_width = F, html_font = "Times New Roman")
+```
+
+
+```{r include=FALSE}
+#### Pass Phase 3 - Model Prediction Accuracy 
+hiring_filter_p3_long$pred_p3 <- round(predict(p3_glmm , type = "response")) 
+
+
+hiring_filter_p3_long<- hiring_filter_p3_long %>% 
+  mutate(correct_p3 = if_else(pass_3 == pred_p3, 1, 0))  
+hiring_filter_p3_long
+
+sum(hiring_filter_p3_long$correct_p3)/nrow(hiring_filter_p3_long)
+```
+
+#### Pass Phase 3 - Graphs and Figures
+
+```{r echo=FALSE}
+plot_3 <- ggplot(hiring, aes(x = pass_3_text, group = gender)) + 
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percentage",x="Pass or Reject", fill="Result") +
+  facet_grid(~gender) +
+  scale_y_continuous(labels = scales::percent)+ 
+  ggtitle("Pass Phase 3 Prediction - All") +
+  scale_fill_discrete(name = "Decision", labels = c("Pass", "Rejected"))
+
+
+plot_3
+
+plot_3_data <- ggplot(hiring_data, aes(x = pass_3_text, group = gender)) + 
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percentage",x="Pass or Reject", fill="Result") +
+  facet_grid(~gender) +
+  scale_y_continuous(labels = scales::percent)+ 
+  ggtitle("Pass Phase 3 Prediction - Data Team") +
+  scale_fill_discrete(name = "Decision", labels = c("Pass", "Rejected"))
+
+
+plot_3_data
+
+plot_3_software <- ggplot(hiring_software, aes(x = pass_3_text, group = gender)) + 
+  geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+  geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ), stat= "count", vjust = -.5) +
+  labs(y = "Percentage",x="Pass or Reject", fill="Result") +
+  facet_grid(~gender) +
+  scale_y_continuous(labels = scales::percent)+ 
+  ggtitle("Pass Phase 3 Prediction - Software Team") +
+  scale_fill_discrete(name = "Decision", labels = c("Pass", "Rejected"))
+
+
+plot_3_software
+
+plot_model(p3_glmm, type = "pred", pred.type = "re", terms = c("rating[all]","gender", "team_applied_for"), title = "Probability of Hired by Interview Rating") + labs(y="Probability")
+```
+Result explanation:
+
+An important note to make is that non of the individuals in the the prefer not to say gender category did not proceed to phase 3 and variations can be due to a limited sample size, therefore they will be deemed as outliers in the interpretation between man, women and teams.
+
+The analysis of the generalized linear mixed model of whether an individual was hired (response: pass_3) on the explanatory variables of applicant_id(random effect), team_applied_for(dummy variable for each category), rating, and gender(dummy variable for each category) showing 0 covariates as statistically significant at the 95% level or greater. The beta coefficients were: baseline(male in data team) with odds values equal to 0 with a 95% confidence interval between (0 and 1961) and statistical significance of (pvalue = 0.0902), software teams with odds values equal to 2 with a 95% confidence interval between (0 and 101) and statistical significance of(pvalue = 0.8428),	rating with odds values equal to 2 with a 95% confidence interval between (1 and 4) and statistical significance of(pvalue = 0.0872), and woman dummy variable with odds values equal to 0.0 with a 95% confidence interval between (0 and 5) and statistical significance of(pvalue = 0.1900).Due to small sample size, the interpretation of the covariates are slightly inaccurate. The baseline(male in the data team) covariate is for a male individual saying that male individuals have odds of 0 which is not statistically significant due to high pvalues, while females have odds of 0 which is not statistically significant due to high pvalues. This difference in odds can be interpreted as a potential non gender bias. The covariate on rating also shows a positive relationship with the odds of the probability of getting hired.Based on the statistical analysis, Black Saber Software does not show a statistically significant bias towards gender in its phase 3 recruitment process, but should not exclude the possibility of a slight potential gender bias due to small percentage differences as shown in the following graphical interpretations. 
+
+Using the provided bar charts we can see the percentage of people that were able to proceed to phase 3, distributed by gender. In the bar chart named "Phase 3 Prediction - All" it contains data for individuals that applied to either team, data or software. The decision making shows a potential bias towards the male gender, as the percentage of men(5.2%) is about 2 times as high than that of woman(2.3%) who were able to proceed to the next phase. The meaning of these percentages is that there exists a minor potential male gender bias in the individuals who proceed from phase 3 to hired in the Black Saber Software recruitment. The next two bar graphs, which are named "Phase 3 Prediction - Data team" and "Phase 3 Prediction - Software team" respectively, show the percentage of individuals separated by gender and team that proceeded to the next phase. In the case of those individuals that applied to a data team, the percentage of men that were able to proceed to the next stage was (3.2%), about a 3 times higher percentage than that of women (0.81%). Lastly, for the software team, the percentage of men that were able to proceed to the next stage was (2.41%), also about a 4 times higher percentage than that of women(0.53%). This means that there could exist the posibility of a slight male gender bias. Furthermore, due to the support from the significance test on the coviariates on team_applied_for we can suggest that differences between team may be due to sample variances. 
+
+Using the provided figures we can also see how each variable affects the probability of proceeding to the hired phase. The figure named "Probability of Hired by Interview Rating", shows the relationship of interview rating and probability of proceeding to the hried phase. This figure shows a positive relationship with interview rating and probability, where higher interview rating ratings gives a higher probability of proceeding to the next phase. Furthermore, the distributions between man and woman is lower for men which suggests the possibility of a male gender bias in the interview process. This is due to the fact that male individuals require a lower average interview rating to be hired as compared with the female counterpart. Furthermore, differences across team do not shows any visual different suggesting that there does not exist a bias between teams. 
+
+#### Summary of All Phase Model Accuracy 
+
+```{r echo=FALSE}
+# Model names
+model_names <- c("Phase 1 to Phase 2", "Phase 2 to Phase 3", "Phase 3 to Hired")
+
+# Model accuracy (Whole)
+phases_company <- c(round(sum(hiring$correct_p1)/nrow(hiring)*100, 2),
+                    round(sum(hiring_filter_p2$correct_p2)/nrow(hiring_filter_p2)*100, 2),
+                    round(sum(hiring_filter_p3_long$correct_p3)/nrow(hiring_filter_p3_long)*100, 2))
+
+model_accuracy <- data.frame(model_names, phases_company)
+
+model_colnames <- c("Model Phase", "Model Predictio Accuracy")
+
+model_table <- kbl(model_accuracy, caption = "Accuracies of models by team",
+                   col.names = model_colnames) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+
+model_table
+```
+Result explanation: 
+
+The table shown describes the model prediction accuraccy for each respective phase. The first model, "p1_glm", used to describe the generalized linear model relationship between phase 1 to phase 2 shows a prediction accuraccy of about 76.84%, meaning that the model was able to correctly predict 76.84% of the individuals that were able to proceed or not to phase 2 from phase 1. The second model, "p2_glm", used to describe the generalized linear model relationship between phase 2 to phase 3 shows a prediction accuraccy of about 94.33%, meaning that the model was able to correctly predict 94.33% of the individuals that were able to proceed or not to phase 3 from phase 2. The third and last model, "p3_glmm", used to describe the generalized linear mixed model relationship between phase 3 to hired shows a prediction accuraccy of about 100%, meaning that the model was able to correctly predict 100% of the individuals that were hired from phase 3.  
+
+## Does the Determination of Salaries Have Any Gender Biases?
+
+## Salary Process
+
+### Data Description
+
+*Data set: Current Employees*
+
+Description: Complete form of all 607 current employees of Black Saber Software for the year 2021
+
+Variables collected:
+
+- employee_id: qualitative variable - Numerical ID assigned to employee
+
+- gender: qualitative variable - man, woman, or prefer not to say
+
+- team: qualitative variable - category for each of the 8 teams in Black Saber Software
+
+- financial_q: quantiative variable - Financial quarter salary, leadership and productivity
+
+- role_seniority: qualitative variable - Role status in Black Saber Software
+
+- leadership_for_level: qualitative variable - Description of individual's leadership qualities
+
+- productivity: qualitative variable - Numerical indicator rated on a 0-100 scale on expected productivity 
+
+- salary: quantiative variable - Salary of individual at a given financial quarter
+
+### Model
+
+**Regression Model and Analysis**
+
+Using a generalized linear mixed effects model, we applied a gaussian family link with the regression model as follows:
+
+$$\log(\cfrac{p}{1-p}) = \beta_{0} + \beta_{1}x_{\text{gender} \ i}  + \beta_{2}x_{\text{team} \ i}+ \beta_{3}x_{\text{leadership}\ i} +  \beta_{4}x_{\text{seniority}\ i} + \beta_{5}x_{\text{promoted}\ i} + \beta_{6}x_{\text{productivity}\ i} + \beta_{7}x_{\text{employee}\ i} \epsilon_i$$
+$$\text{where } i = 1,2,...n\ and\ p\ =\text{Predicted Salary}$$
+
+When deciding the link function, we consider the following things:
+
+
+```{r message=FALSE, include=FALSE}
+# # read in data
+black_saber_current_employees <- read_csv("data/black-saber-current-employees.csv")
+
+# create columns year and q
+
+black_saber_current_employees <- black_saber_current_employees %>%
+  mutate(year = as.integer(substr(financial_q, 1, 5)), quarter = as.integer(substr(financial_q, 7, 8))) %>%
+  select(-financial_q)
+
+# added a q_worked column
+black_saber_current_employees <- black_saber_current_employees %>% group_by(employee_id, role_seniority) %>%
+ mutate(q_worked = order(order(year, quarter)))
+
+# Convert role_seniority to a factor with ordered levels
+black_saber_current_employees <- black_saber_current_employees %>% mutate_at(c("role_seniority"), factor, levels=c("Entry-level", "Junior I", "Junior II", "Senior I", "Senior II", "Senior III", "Manager", "Director", "Vice president"), ordered=TRUE)
+                                                         
+# see if promoted
+black_saber_current_employees <- black_saber_current_employees %>% group_by(employee_id) %>% mutate(promoted = if_else(role_seniority < lag(role_seniority), 1, 0))
+
+black_saber_current_employees <- black_saber_current_employees %>%
+  mutate(promoted = if_else(is.na(promoted), 0, promoted))
+
+# correct productivty 
+black_saber_current_employees <- black_saber_current_employees %>%
+  mutate(productivity = ifelse(productivity > 100, 100, productivity))
+
+
+# change salary to numerical data
+black_saber_current_employees$salary <- gsub("\\$", '', black_saber_current_employees$salary)
+black_saber_current_employees$salary <- gsub(',', '', black_saber_current_employees$salary)
+black_saber_current_employees$salary <- as.numeric(black_saber_current_employees$salary)
+
+# change gender to gender1 and remove prefer not to says
+black_saber_current_employees <- black_saber_current_employees %>%
+  filter(gender %in% c("Man", "Woman")) %>%
+  mutate(gender1 = if_else(gender=="Man", 1, 0)) %>%
+  select(-gender)
+
+
+# Create subset df for each team and determine if promotion on each "team" is biased
+unique(black_saber_current_employees$team)
+
+```
+
+```{r include=FALSE}
+sapply(black_saber_current_employees, class)
+```
+
+```{r echo=FALSE}
+# distribution of salary amongst black saber software employees
+ggplot(black_saber_current_employees, aes(x=salary, colour=gender1)) +
+  geom_histogram() + 
+  theme_minimal() +
+  labs(title = "Histogram of Salaries in Black Saber Software",
+       subtitle = "Distribution of Salary Data",
+       x = "Salary",
+       y = "Count",
+       caption = str_c("Created by: David Wong for Black Saber Analytics"))
+```
+
+*Knowledge of the response*
+
+First, we plot the distribution of Salaries into a histogram to understand the relative shape of all of the data points. From (figure), the plot is heavily right skewed as there exists a large gap of salaries on the right tail of the plot. This is likely because presidents and other C-level executives get paid significantly higher than the rest of employees. Thus, we should expect our model prediction outputs to reflect a similar pattern.
+
+```{r include=FALSE}
+
+# exp_model <- lme4::glmer(salary ~ leadership_for_level + productivity + gender1 +(1|gender1), family = Gamma, data = black_saber_current_employees)
+
+full_model <- lme4::glmer(salary ~ factor(team) + leadership_for_level + role_seniority + promoted + productivity + gender1 +(1|employee_id), family = gaussian, data = black_saber_current_employees) #base on prev study, based on preliminary analysis, algorithm etc... #team is fixed effect
+
+AIC(full_model)
+# Use AIC BIC
+
+full_model_2 <- lme4::glmer(salary ~ team + gender1 +(1|employee_id), family = gaussian, data = black_saber_current_employees)
+
+# might need model of candidate, likelihood test for model
+lrtest (full_model, full_model_2) # tests if theyre similar, p value if reject null hyp, is there sig diff btwn model, use most complicated model for better result, if p value large, not sig diff between 2 models
+
+summary(full_model)
+summary(full_model_2)
+```
+
+```{r echo=FALSE}
+#regression output in a table
+
+p1_result_table <- cbind(est = summary(full_model)$coef[,1], std = summary(full_model)$coef[,2], coeff = summary(full_model)$coef[,3])
+
+p1_result_table %>%
+ kable(caption = "Estimates, Std Error, and T-Value for Full Model", col.names = c("Estimate", "Std. Error", "T-val")) %>%
+ kable_classic(full_width = F, html_font = "Times New Roman") # regression model outputs into a table
+
+
+hist(residuals(full_model)) #normal ish residuals - justification for gaussian link
+```
+
+*Theoretical considerations*
+Although a Gamma fit is more appropriate for temporal data, it is appropriate to apply a Gamma link when using the 'Year' variable in the regression. However, because we had modelled this variable into 'q_worked', which gives a count for the quarters worked of an individual in their position title which resets upon promotion, now becomes a variable that loses its temporal factor but now is a variable for tenureship. Furthermore, if we graph the histogram of the residual plots for Salary, we can see that it follows a very rough normal distribution. Because of this, residuals are consistent with your assumption of normality, but they don't "validate" the assumption. 
+
+*Empirical fit to the data* 
+When assessing the predictability and the output of the regression model for the predicted salaries, we see the same trends as displayed in the real salary histogram. There is a large gap between those earning under $80,000 and those earning more than $110,000. Furthermore, the concentration of prediction values overall in both ends of this split are roughly the same as the real data for Salaries. Thus, we can say that a Gaussian link is appropriate for our data.
+
+```{r include=FALSE}
+black_saber_current_employees$model_predictions <- round(predict(full_model,type="response"))
+
+black_saber_current_employees <- black_saber_current_employees %>%
+  mutate(correct = if_else(model_predictions == salary, 1, 0))
+
+# use mean square error, sum all of the sq and divide by the sample size
+
+sum(black_saber_current_employees$model_predictions) / NROW(black_saber_current_employees)
+
+black_saber_current_employees_gp <- black_saber_current_employees %>%
+  group_by(team, role_seniority) %>%
+  summarize(avg = mean(model_predictions))
+
+black_saber_current_employees_gp_2 <- black_saber_current_employees_gp %>%
+  group_by(team) %>%
+  summarize(avg_team = mean(avg)) # we dont need to table this, i dont think the info is that useful
+
+```
+
+```{r echo=FALSE}
+# using the gaussian link, we get a relatively nice prediction output
+
+ggplot(black_saber_current_employees, aes(x=productivity, y=model_predictions, color=gender1)) +geom_point() + theme_minimal() +
+  labs(title = "Scatter Plot of Model Predictions of Salaries in Black Saber Software",
+       subtitle = "Visualiizing our Predictions",
+       x = "Salary Predictions",
+       y = "Productivity",
+       caption = str_c("Created by: David Wong for Black Saber Analytics"))
+  
+
+ggplot(black_saber_current_employees, aes(x=model_predictions, fill=gender1)) +geom_histogram() + theme_minimal() +
+  labs(title = "Histogram of Model Predictions of Salaries in Black Saber Software",
+       subtitle = "Visualiizing our Predictions",
+       x = "Salary Predictions",
+       y = "Count",
+       caption = str_c("Created by: David Wong for Black Saber Analytics"))
+
+
+```
+
+
+```{r include=FALSE}
+#dont need to include this in the report, but need to run it to get the next visualization
+full_model_exp <- lme4::glmer(salary ~ gender1 + (1|employee_id), family = Gamma(link="log"), data = black_saber_current_employees)
+
+full_model_2_exp <- lme4::glmer(salary ~ gender1 + (1|productivity), family = Gamma(link="log"), data = black_saber_current_employees)
+
+full_model_3_exp <- lme4::glmer(salary ~ gender1 + (1|q_worked), family = Gamma(link="log"), data = black_saber_current_employees)
+
+full_model_4_exp <- lme4::glmer(salary ~ gender1 + (1|promoted), family = Gamma(link="log"), data = black_saber_current_employees)
+
+black_saber_current_employees$model_predictions_2 <- round(predict(full_model_exp,type="response"))
+
+
+sum(black_saber_current_employees$model_predictions_2) / NROW(black_saber_current_employees)
+```
+
+
+
+
+```{r echo=FALSE}
+#this is why gamma link is not a good choice, you can include this as justification as to why the gamma link is bad 
+
+ggplot(black_saber_current_employees, aes(x=productivity, y=model_predictions_2, color=gender1)) +geom_point() + theme_minimal() +
+  labs(title = "Scatter Plot of Model Predictions of Salaries in Black Saber Software",
+       subtitle = "This is Why a Gamma Link is Not Good Predictability",
+       x = "Salary Predictions",
+       y = "Productivity",
+       caption = str_c("Created by: David Wong for Black Saber Analytics"))
+```
+*What happens when we apply a Gamma model link instead?*
+We attempted to apply a Gamma model as per the recommendation by our affiliates, but we often encountered convergence errors and computational errors by the linear algebra involved in computing the regression. However, we were able to bypass these issues by reducing our model variables significantly, which took away from the predictive power of the model. Since there were too many large compromises to both attempt to get p-values from our model outputs while also following the recommendations from our affiliates, we thought our justification for using a Gaussian link was strong enough.
+
+### Results
+Our model did not produce any p-values, we are only able to discuss the t-values computed by our regression model. A high absolute value of a t-value implies that it likely has a significant p-value, meaning that team, role seniority, gender, promoted, and productivity would likely display significant p-values in from most significant to least significant in the respective order. This implies that although we cannot make a distinct and direct connection between gender and salary, we are able to say that out of all the regression variables defined in the model, gender plays only a moderate significance in the determination of compensation levels for Black Saber Software. This implies and even if gender plays a significant effect in the determination of the salary of an employee, it will likely be one of the less important factors in this area meaning this interpretation for bias may be open to other determining confounders in our model. 
+
+
+## Does gender bias affect promotions in Black Saber Software, either in specific teams or company as a whole?
+
+## Promotion Process
+
+### Methods
+
+The source of the data for our model comes from the current employees data provided by Black Saber Software. A total of 607 current employees were included and none were excluded from the current employee data set.
+
+Our model investigates the association between gender and getting a promotion for 607 current employees at Black Saber Software. 
+Work output in relation to the employee’s job description was rated on a 0-100 scale, where 50 is satisfactory and above 50 indicates a better than expected productivity. Quality of demonstrated leadership, taking into account the employee’s role level, was measured on three levels: Appropriate for level, Needs Improvement and Exceeds Expectations. If an employee was promoted to a senior role in the next quarter, their promoted status was 1 and otherwise, 0.
+
+In total, we have 9 models for our third research question of interest. First, our full model’s outcome of interest was whether the employee got promoted or not in a given quarter and our predictors were their gender, productivity, demonstrated leadership quality, and the number of financial quarters worked in a particular role. As there were repeated measures for each employee, a generalized linear mixed model with logit link was used and random intercepts were estimated for each employee. The employee ID was treated as a random effect. All other variables, such as productivity score, were considered as fixed effects. 
+
+The model for $Y_i$ is as follows:
+$Y_{it} \sim Bernoulli(p_{it})$
+$logit(p_{it}) = \mu + X_{it}\beta + U_i$
+$U_i \sim N(0, \sigma^2)$
+
+Let $Y_{i}$ be an indicator variable recording if Employee $i$ was promoted in the next financial quarter (1) or not promoted in the next financial quarter (0). We can consider $Y_{i}$ to be a Bernoulli random variable with the parameter $p_{i}$, where $p_{i}$ is the true probability that the $i^{th}$ employee was promoted in the next financial quarter. We model the logit function of $p_{i}$ for Employee $i$ as a linear function of our covariates.
+
+In addition to this full model, we also subsetted the full model into the 8 different teams to compare the significance of gender within each team. Thus, we have 8 models with exactly the same predictors as our full model, except that we compare the association between gender and promotions within each team to aid our interpretations for determining gender bias in the company as a whole. 
+
+### Results
+
+```{r, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+# read in data
+black_saber_current_employees <- read_csv("data/black-saber-current-employees.csv")
+
+# create columns year and q
+black_saber_current_employees <- black_saber_current_employees %>%
+  mutate(year = as.integer(substr(financial_q, 1, 5)), quarter = as.integer(substr(financial_q, 7, 8))) %>%
+  select(-financial_q)
+
+# added a q_worked_in_sr column
+black_saber_current_employees <- black_saber_current_employees %>% group_by(employee_id, role_seniority) %>%
+ mutate(q_worked_in_rs = order(order(year, quarter)))
+
+# Convert role_seniority to a factor with ordered levels
+black_saber_current_employees <- black_saber_current_employees %>% mutate_at(c("role_seniority"), factor, levels=c("Entry-level", "Junior I", "Junior II", "Senior I", "Senior II", "Senior III", "Manager", "Director", "Vice president"), ordered=TRUE)
+                                                         
+# see if promoted
+black_saber_current_employees <- black_saber_current_employees %>% group_by(employee_id) %>% mutate(promoted = if_else(role_seniority < lag(role_seniority), 1, 0))
+
+black_saber_current_employees <- black_saber_current_employees %>%
+  mutate(promoted = if_else(is.na(promoted), 0, promoted))
+
+# correct productivty 
+black_saber_current_employees <- black_saber_current_employees %>%
+  mutate(productivity = ifelse(productivity > 100, 100, productivity))
+
+# change salary to numerical data
+black_saber_current_employees$salary <- gsub("\\$", '', black_saber_current_employees$salary)
+black_saber_current_employees$salary <- gsub(',', '', black_saber_current_employees$salary)
+black_saber_current_employees$salary <- as.numeric(black_saber_current_employees$salary)
+
+# Create subset df for each team and determine if promotion on each "team" is biased
+unique(black_saber_current_employees$team)
+
+subset_cs <- black_saber_current_employees %>%
+  filter(team == "Client services")
+subset_data <- black_saber_current_employees %>%
+  filter(team == "Data")
+subset_design <- black_saber_current_employees %>%
+  filter(team == "Design")
+subset_legal <- black_saber_current_employees %>%
+  filter(team == "Legal and financial")
+subset_marketing <- black_saber_current_employees %>%
+  filter(team == "Marketing and sales")
+subset_op <- black_saber_current_employees %>%
+  filter(team == "Operations")
+subset_talent <- black_saber_current_employees %>%
+  filter(team == "People and talent")
+subset_software <- black_saber_current_employees %>%
+  filter(team == "Software")
+```
+
+
+```{r, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+full_model <- lme4::glmer(promoted ~ factor(team) + leadership_for_level + productivity + factor(gender) + q_worked_in_rs + (1|employee_id), family = binomial, data = black_saber_current_employees, nAGQ=0)
+
+
+AIC(full_model)
+
+full_model_2 <- lme4::glmer(promoted ~ leadership_for_level + productivity + factor(gender) + q_worked_in_rs + (1|employee_id), family = binomial, data = black_saber_current_employees, nAGQ=0)
+summary(full_model_2)
+
+AIC(full_model_2)
+
+
+full_model_3 <- lme4::glmer(promoted ~ productivity + factor(gender) + q_worked_in_rs + (1|employee_id), family = binomial, data = black_saber_current_employees, nAGQ=0)
+AIC(full_model_3)
+
+full_model_4 <- lme4::glmer(promoted ~ factor(gender) + q_worked_in_rs + (1|employee_id), family = binomial, data = black_saber_current_employees, nAGQ=0)
+AIC(full_model_4)
+
+full_model_5 <- lme4::glmer(promoted ~ factor(gender) +  (1|employee_id), family = binomial, data = black_saber_current_employees, nAGQ=0)
+AIC(full_model_5)
+
+full_model_6 <- lme4::glmer(promoted ~ factor(gender) +  (1|employee_id) + productivity + leadership_for_level, family = binomial, data = black_saber_current_employees, nAGQ=0)
+AIC(full_model_6)
+
+lrtest(full_model_2, full_model)
+lrtest(full_model_2, full_model_6)
+```
+
+```{r, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+# Get model predictions as probability
+black_saber_current_employees$model_predictions <- predict(full_model_2, type="response")
+
+# Round probability to 0 or 1
+black_saber_current_employees$rounded_model_predictions <- round(black_saber_current_employees$model_predictions)
+
+# Check if correct
+black_saber_current_employees <- black_saber_current_employees %>%
+  mutate(correct = if_else(rounded_model_predictions == promoted, 1, 0))
+
+# Get percentage of correct estiamtes
+sum(black_saber_current_employees$correct) / NROW(black_saber_current_employees)
+
+```
+
+```{r, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+promoted_to_prediction <- table(black_saber_current_employees$promoted, black_saber_current_employees$rounded_model_predictions, dnn = c("Promoted", "Model Prediction"))
+addmargins(promoted_to_prediction)
+```
+
+Looking at the contingency table above allows us to examine the performance of our model. Out of the total 6337 obversions where there were no promotions, there were 21 false positives, representing instances where the model predicted an employee's factors in the specific quarter would lead to a promotion when infact no promotion was given. Out of the 569 promotions that occurred, the model successfully predicted 185 instances while failing to predict 384 promotions. Overall, the model predictions aligned with the actual results 94.14% of the time.
+
+```{r, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+cs_model <- lme4::glmer(promoted ~ leadership_for_level + productivity + factor(gender) + q_worked_in_rs +(1|employee_id), family = binomial, data = subset_cs, nAGQ=0)
+data_model <- lme4::glmer(promoted ~ leadership_for_level + productivity + factor(gender) + q_worked_in_rs +(1|employee_id), family = binomial, data = subset_data, nAGQ=0)
+design_model <- lme4::glmer(promoted ~ leadership_for_level + productivity + factor(gender) + q_worked_in_rs +(1|employee_id), family = binomial, data = subset_design, nAGQ=0)
+legal_model <- lme4::glmer(promoted ~ leadership_for_level + productivity + factor(gender) + q_worked_in_rs +(1|employee_id), family = binomial, data = subset_legal, nAGQ=0)
+marketing_model <- lme4::glmer(promoted ~ leadership_for_level + productivity + factor(gender) + q_worked_in_rs +(1|employee_id), family = binomial, data = subset_marketing, nAGQ=0)
+op_model <- lme4::glmer(promoted ~ leadership_for_level + productivity + factor(gender) + q_worked_in_rs +(1|employee_id), family = binomial, data = subset_op, nAGQ=0)
+software_model <- lme4::glmer(promoted ~ leadership_for_level + productivity + factor(gender) + q_worked_in_rs +(1|employee_id), family = binomial, data = subset_software, nAGQ=0)
+talent_model <- lme4::glmer(promoted ~ leadership_for_level + productivity + factor(gender) + q_worked_in_rs +(1|employee_id), family = binomial, data = subset_talent, nAGQ=0)
+```
+
+```{r, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+Models = c("Model","Intercept","Exceeds Expectations", "Needs Improvement", "Productivity", "Woman", "Prefer Not to Say" ,"Quarters Worked in Role")
+
+c <- c("CS",-8.3542, 0, 0, 0.09473, 0, 0, 0.09286)
+d<- c("Data",-9.30532, 2.18031, 0, 0.11893, 0, 0, 0)
+de <- c("Design",-6.51526, 0, 0, 0.0716, 0, 0,0) 
+leg <- c("Legal",-13.09110, 1.71492 ,0,0.14157,0, 3.20391,0.20923)
+mkt <- c("Marketing", -12.44602, 1.03407, 0, 0.16180, -1.59022, 0, 0.15336)
+op <- c("Operations", -8.22598, 1.22224, 0, 0.10060, 0, 0, 0)
+sw <- c("Software", -8.290619, 0.861776, 0, 0.102532, 0, 0, 0)
+tal <- c("Talent", -12.14544, 0, 0, 0.15233, 0, 0, 0.17236)
+full <- c("Full", -9.30972, 1.01017, 0, 0.11458, -0.42821, 0, 0.06371)
+
+mat <- as.data.frame(rbind(Models,c,d,de,leg,mkt,op,sw,tal, full))
+names(mat) <- mat[1,]
+mat <- mat[-1,]
+rownames(mat) <- NULL
+mat
+```
+
+This table shows the statistically significant estimates of the different models we have constructed, where non-significant estimates are replaced with 0.
+Since productivity was significant in all models, let's take a look at how productivity affects an employee's probability of promotion in your company visually.
+
+```{r, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+# Plots Productivity to probability of promotion for each team
+black_saber_current_employees %>% 
+  ggplot(mapping = aes(productivity, y=model_predictions, color=gender)) + 
+  geom_point(size=0.7) + 
+  theme_minimal() +
+  ggtitle("Probability of Promotion to Productivity") + labs(x="Productivity", y="Probability of Promotion") + 
+  facet_wrap(~team) +
+  scale_color_brewer(palette="Dark2")
+```
+
+We can see that for across all teams, that although having a high productivity score does not guarantee a promotion (especially in Client services team), all employees who received promotions in the model all had productivity scores above 50. It is good to see that your company is generally rewarding employees who are highly productive, regardless of gender.
+
+Since the relationship between productivity and probability of promotion is consistent across teams, and none of the team estimates in the initial model is significant, we can consider dropping team as a fixed effect in the initial full model.
+
+After removing 'team' as a mixed model we ran a lr test which was nonsignificant meaning the simpler describes the data just as well as the more complex model. We ran an AIC test and model the simpler model without 'team' had a lower AIC test score of 2955.31 compared to the more complex model with 2965.369. The AIC test also suggests that the simpler model should be chosen over the initial model. We compared an magnitude of different models and ran LR and AIC test to determine the most appropriate model and we found that the best model was the model with the employees leadership for level, gender, productivity score and the number of quarters they have spent in their role as fixed effects and employee ID as a random effect.
+
+We compared the prediction accuracy and compared the contingency tables for the full model and the optimal chosen model, although the chosen model was a simpler model with less explanatory variables its performance was the same compared to the full model. This solidifies our idea that team is not significant in effect one's odds of promotion, so going forward we will be analyzing gender bias of promotion as in your company as a whole.
+
+
+```{r}
+summary(full_model_2)
+```
+
+The model estimate for being a woman whose leadership skill is appropriate for level is 1.53% lower than a man whose leadership skill is also appropriate or level. This corresponds to 0.3946% reduction in probability of being promoted compared to a man, all else equal.
+
+A women who's leadership score is appropriate for level would need a higher productivity score of 4, to achieve the same odds of being promoted, compared to a man who's leadership skill is also appropriate for level.
+
+The odds of a man being promoted in a quarter where his leadership level was appropiate for the current level is $9.05\times {10^{-5}}$. The base line in the model is a man who's leadership level in the given quarter was appropiate for his current level. Employees who exceeded expecations for their current level had 2.75% higher odds of being promoted. For each one rating increase in productivity the odds of promoted is 1.12% higher. According to the model, being a women had lower 0.65% odds of being promoted and for each additional quarter spend in the current role lead to the odds of promotion to be 1.5% higher. 
+
+#### Please find the 95% confidence interval for each the full model estimates below. 
+```{r, include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+confints_df <- as.data.frame(confint.merMod(full_model, method = "Wald"))
+confints_df <- confints_df[-1, ]
+confints_df
+```
+
+
+#### Statment/Conclusion.
+From our analysis we see that although there is a bias for men be promoted over women throughout your company, the bias effect is small and is mainly driven by productivity. It is good to see that promotion is mainly driven by productivity, but the small bias is not negligible because in the future as you want your company to promote equal opportunity for all.
+
+
+#########################################################################
+\newpage
+# Discussion
+
+From each of our research questions regarding possible biases existing in the hiring, promotion and remuneration processes for Black Saber Software. We concluded that there exists a difference in the hiring, promotion, and remuneration rates between men and women; however, there seems to be weak evidence to claim that there exists a bias. Despite some of our models finding that there exists perhaps a small bias in these areas for Black Saber Software, other factors such as productivity holds a much stronger deterministic factor when considering hiring and remuneration rates. This holds consistent with previous research and their findings. In our base article, researchers concluded that worker-specific productivity differences may be a primary reason for gendered promotion rates and that remuneration rates reflect the productivity of work from an individual, where gendered effects ended up being negligibly small relative to other contributing effects (Jokinen et al., 2017). For Black Saber Software, evidence shown through their employee and hiring datasets tells a consistent story when compared to prior research. 
+
+In our first research question that aimed to solve if the AI algorithm was biased in its rating of candidates for the hiring process. This is an essential component to assess to ensure that hiring systems are equitable and fair for every applicant, otherwise, a biased algorithm results in possible discriminatory effects against candidates that do not match its perceived ideal profile. When assessing the regression model outputs, it displays insignificant p-values where both gendered effects in their application responses did not contribute to the success of the candidate’s application. 
+
+Similarly, in our 2nd research question that aimed to find if salaries were biased with gendered effects. In our analysis of the model outputs, we concluded that there exists either no or minimal gendered effects in the determination of worker salaries within Black Saber Software’s current compensation models. There are other effects in our prediction parameters that contribute to salary such as team and role seniority in the company. This ties into our next model that aimed to determine if there are biased effects in the promotions of individuals within the company.
+
+Lastly, in our 3rd research question, we found that although there exists a very small gendered effect in the probability to be promoted between men and women; this probability only amounts to a difference of 0.3946%. This difference is mostly attributed to the difference in productivity for an individual in the company, which further builds upon Jokinen’s conclusions from their 2017 paper. 
+
+# Strengths and limitations
+
+While our results do reflect strong historical and concurrent evidence suggesting that there exist no biases in the hiring, promotion, and salary processes for Black Saber Software, there are considerations and critiques to be made along our experimental process. For our hiring data sets, sample sizes especially for later rounds of the hiring process reduced down to as low as 22 data points. This implies that sample sizes in our analysis overall might have been insufficient to perform any form of robust analysis on gendered effects. Furthermore, because this hiring data is based on a specific and recent time frame for Black Saber Software’s hiring processes, analyzing past years data for Black Saber Software would improve our conclusions in identifying hiring biases. Furthermore, our data modelling procedures when defining new variables such as ‘q_worked’ in the internal employee dataset, would result in a slight change in interpretation of our parameters. Rather than having our parameters, ‘year’ and ‘quarter’, base itself temporally on the time the individual was promoted, now it is based off of a ‘tenureship’ like variable called ‘q_worked’. This variable, ‘q_worked’ is arguably a stronger variable since now it holds stronger significance in its deterministic effect for an employee. Similar to the parameters chosen in Jokinen’s paper, tenureship with the university proved to be one parameter of justification for salaries in their study. This effect is reflected similarly in our regression outputs, where in our 3rd research question regarding promotions, tenureship remained to be a less significant factor than the productivity of a worker when considering promotions. Thus, despite caveats in the ways we defined certain parameters, the parameters that most interest us reflected the same conclusions as did previous studies we initially observed.
+
+Our modelling and prediction outputs resulted in strong accuracy. In our analysis of our first research question tackling gender biases in the hiring process, our first model produced a 77% prediction accuracy, which is relatively low but considering that we had a poor sample size overall, having a more robust data set might improve the prediction accuracy. However, for the 2nd and 3rd models for the first research question, we had over 90% prediction accuracy for these subsequent models. Furthermore, in our 3rd research question that we tackled regarding gender biases in promotions, we had a prediction accuracy of over 90% as well. Hence, this implies that our model parameters constructed a strong framework for predicting candidate and employee profiles when considering factors like hiring, promotions, salary. 
+For future developments in the field of researching biases in the hiring, promotions and salary factors for Black Saber Software, would require a wider scope of data where we can analyze other covariates and confounders not included in our analysis. As per the suggestion from the project proposal, ethnicity, race and other socioeconomic variables play a contributing factor in having a strong EDI framework. In order to be equitable, fair, and inclusive in Black Saber Software, developments to work towards developing a more robust analysis of bias would be helpful to Black Saber Software executives. EDI principles are not exclusive to only the parameters defined in our dataset and dialogues revolving around EDI factors are constantly evolving. It is crucial for companies like Black Saber Software to maintain their values and commitment towards approaching a workplace that is equitable, diverse, and inclusive.
+
+\newpage
+# Consultant information
+## Consultant profiles
+
+
+**Jing Yuan Zhang**. Ashley is a senior consultant with Saber Analytics. She specializes in data visualization. Jing Yuan earned her Bachelor of Science, Double Major in Statistics and Mathematics, from the University of Toronto in 2022.
+
+**Howard Wang**. Howard is a senior consultant with Saber Analytics. She specializes in data visualization. Howard earned her Bachelor of Science, Double Major in Statistics and Economics, from the University of Toronto in 2022.
+
+**David Wong**. David is a senior consultant with Saber Analytics. He specializes in data visualization. David earned her Bachelor of Science, Major in Economics and double minor in GIS and statistics, from the University of Toronto in 2023
+
+**Muhammad Tsany**. Muhammad is a senior consultant with Saber Analytics. He specializes in data visualization. Muhammad earned her Bachelor of Science, Double Major in Statistics and Economics, from the University of Toronto in 2022.
+
+**Sergio Steven Zheng Zhou**  Sergio is a senior consultant with Saber Analytics. He specializes in data visualization. Sergio earned her Bachelor of Science, Double Major in Statistics and Economics, from the University of Toronto in 2021.
+
+
+\newpage
+
+# Code of ethical conduct
+
+To ethically fulfill the privacy requirements of all applicants, data sets provided were anonymous and limited in the amount of characteristics provided. All observations had unique values under "Applicant ID". However, all participants may not have been given informed consent on the use their personal data. The consent factor is unknown to our analysis as it was not given within the descriptions of the data sets. In this report, we assume that the data set provided by Black Saber Software fulfilled all ethical and legal requirements.
+
+The data collected for the report did not exert any physical, psychological, or emotional harm to any participants. As this is a consulting project, we did not directly test on the participants. Only the results of the hiring, salary, and promotions of the company were analyzed and would not have any effect on the participants.
+
+As ethical statisticians working under Saber Analytics, we acknowledge and distinguish between proper and improper statistical methods. We acknowledge the data wrangling procedures and editing, possible sources of error, and limitations of our statistical inferences. Our final report conveys our findings with honesty. We ensure that our statistical approaches are appropriate for Black Saber Software.
+
+\newpage
+
+# References
+
+\setlength{\parindent}{-0.2in}
+\setlength{\leftskip}{0.2in}
+\setlength{\parskip}{8pt}
+\noindent
+
+Jokinen, J., & Pehkonen, J. (2017). Promotions and earnings - gender or merit? evidence from longitudinal personnel data. Journal of Labor Research, 38(3), 306-334. doi:http://dx.doi.org.myaccess.library.utoronto.ca/10.1007/s12122-017-9254-7 
+
+Xie Y, Shauman KA (1998) Sex differences in research productivity: New evidence about an old puzzle. Am Sociol Rev 63(6):847–870. doi:10.2307/2657505 
+
+Hesli VL, Lee JM (2011) Faculty Research productivity: Why do some of our colleagues publish more than others? PS: Political Science and Politics 44(2):393–408. doi:10.1017/S1049096511000242 
+
+Ali A. Karakhan, John A. Gambatese,  Denise R. Simmons, and  Ahmed Jalil Al-Bayati. (2020). “Identifying Pertinent Indicators for Assessing and Fostering Diversity, Equity, and Inclusion of the Construction Workforce”. Journal of Management in Engineering, 37(2). https://doi-org.myaccess.library.utoronto.ca/10.1061/(ASCE)ME.1943-5479.0000885  
+
